@@ -14,11 +14,16 @@ class ApiController extends Controller
     public function register(Request $request)
     {
         $data = $request->only('name', 'email', 'password', "role", "city_name");
+        if ($request->role == "Admin") {
+            $request->role = 1;
+        }else{
+            $request->role = 2;
+        }
         $validator = Validator::make($data, [
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
             'city_name' => 'required|string',
-            'role' => 'required|in:1,2',
+            'role' => 'required',
             'password' => 'required|string|min:6|max:50'
         ]);
 
@@ -33,7 +38,7 @@ class ApiController extends Controller
             'city_name' => $request->city_name,
             'role' => $request->role
         ]);
-
+        
         return response()->json([
             'success' => true,
             'message' => 'User created successfully',
@@ -126,14 +131,22 @@ class ApiController extends Controller
         $user = JWTAuth::authenticate($request->token);
         $user->update([
         	'name' => $request->name,
-        	'city_name' => $request->cityName,
+        	'city_name' => $request->city_name,
         	'password' => bcrypt($request->password)
         ]);
         return response()->json([
             'success' => true,
             'message' => 'User Update successfully',
-            'data' => $user
+            'data' => $user,
+            'token' => $request->token
         ], Response::HTTP_OK);
+    }
+
+    public function getAllUser(Request $request)
+    {
+        $users = User::all();
+ 
+        return response()->json(['user' => $users]);
     }
 
     public function deleteUser(Request $request)
